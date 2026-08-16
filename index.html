@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Polite Kids English Academy</title>
+  <title>Ultimate English Master</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <header>
-    <h1>English Academy 🌟</h1>
-    <p>Learn Words, Long Sentences & Good Manners!</p>
+    <h1>Ultimate English Master 🌟</h1>
+    <p>1,000,000 Sentences & 747 Advanced Words!</p>
   </header>
 
   <div class="controls-bar">
@@ -22,9 +22,9 @@
     <div class="level-selector">
       <label for="category">Category: </label>
       <select id="category" onchange="handleCategoryChange()">
-        <option value="manners" selected>Greetings & Good Manners</option>
-        <option value="longSentences">Long Sentences</option>
-        <option value="words">Advanced Words</option>
+        <option value="generator" selected>1 Million Sentences</option>
+        <option value="hardWords">747 Advanced Words</option>
+        <option value="manners">Greetings & Manners</option>
       </select>
     </div>
   </div>
@@ -44,18 +44,14 @@
   <div id="speak-mode" class="card">
     <h2>Speak to Me</h2>
     
-    <div class="search-box">
-      <input type="text" id="custom-input" placeholder="Type a word or polite sentence...">
-      <button class="btn btn-small" onclick="loadCustomInput()">Search</button>
-    </div>
-
     <div class="word-display" id="speak-text">Loading...</div>
     <div class="phonetic-display" id="speak-phonetic">How to say: ...</div>
     
     <button class="btn btn-small" onclick="speakCurrentText('speak')">🔊 Hear Slow Example</button>
 
+    <!-- Universal Mic Button -->
     <button class="btn mic-btn" id="mic-btn" onclick="startListening()">🎙️</button>
-    <div class="feedback" id="feedback">Press the mic and speak politely!</div>
+    <div class="feedback" id="feedback">Press the mic, allow permissions, and speak!</div>
     
     <br>
     <button class="btn btn-next" onclick="loadNextItem('speak')">🎲 Random Challenge</button>
