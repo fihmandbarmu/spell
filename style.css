@@ -1,187 +1,176 @@
-:root {
-  --primary: #6C5CE7;
-  --secondary: #00CEC9;
-  --yellow: #FDCB6E;
-  --dark: #2D3436;
-  --light: #DFE6E9;
-  --card-bg: #FFFFFF;
+// Bank containing basic, long/advanced words, and sentences across levels
+const contentDatabase = {
+  basic: [
+    { type: "word", text: "Butterfly", phonetic: "/ˈbʌt.ə.flaɪ/", def: "A flying insect with large colorful wings." },
+    { type: "sentence", text: "The cat sits on the warm mat.", phonetic: "The cat sits on the warm mat.", def: "Basic practice sentence." },
+    { type: "word", text: "Elephant", phonetic: "/ˈel.ɪ.fənt/", def: "A very large gray mammal with a trunk." }
+  ],
+  advanced: [
+    { type: "word", text: "Extraordinary", phonetic: "/ɪkˈstrɔː.dən.ər.i/", def: "Very unusual, remarkable, or special." },
+    { type: "word", text: "Incomprehensible", phonetic: "/ɪnˌkɒm.prɪˈhen.sə.bəl/", def: "Impossible or very difficult to understand." },
+    { type: "sentence", text: "The astronomer observed distant galaxies through a giant telescope.", phonetic: "The as-tron-o-mer ob-served dis-tant gal-ax-ies...", def: "Advanced sentence with long vocabulary." },
+    { type: "word", text: "Philosophical", phonetic: "/ˌfɪl.əˈsɒf.ɪ.kəl/", def: "Relating to the study of knowledge and reality." }
+  ],
+  expert: [
+    { type: "word", text: "Disproportionate", phonetic: "/ˌdɪs.prəˈpɔː.ʃən.ət/", def: "Too large or too small in comparison to something else." },
+    { type: "sentence", text: "Biodiversity plays an indispensable role in maintaining ecological equilibrium.", phonetic: "Bi-o-di-ver-si-ty plays an in-dis-pen-sa-ble role...", def: "Complex academic practice sentence." },
+    { type: "word", text: "Uncharacteristic", phonetic: "/ˌʌn.kær.ək.təˈrɪs.tɪk/", def: "Not typical of a particular person or thing." }
+  ]
+};
+
+let currentListenItem = null;
+let currentSpeakItem = null;
+let recognition = null;
+
+// Initialize Speech Recognition API
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+
+  recognition.onresult = function(event) {
+    const spokenText = event.results[0][0].transcript.toLowerCase().trim();
+    checkSpeech(spokenText);
+  };
+
+  recognition.onerror = function() {
+    showFeedback("Didn't catch that clearly. Try speaking closer to the mic!", "incorrect");
+    stopMicAnimation();
+  };
+
+  recognition.onend = function() {
+    stopMicAnimation();
+  };
 }
 
-* {
-  box-sizing: border-box;
-  font-family: 'Comic Sans MS', 'Fredoka', 'Chalkboard SE', sans-serif;
+function getSelectedLevel() {
+  return document.getElementById('difficulty').value;
 }
 
-body {
-  margin: 0;
-  padding: 20px;
-  background-color: #F4F6F9;
-  color: var(--dark);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
+function handleLevelChange() {
+  loadNextItem('listen');
+  loadNextItem('speak');
 }
 
-header {
-  text-align: center;
-  margin-bottom: 15px;
+function switchTab(tab, event) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
+
+  event.target.classList.add('active');
+
+  if (tab === 'listen') {
+    document.getElementById('listen-mode').classList.add('active');
+    if (!currentListenItem) loadNextItem('listen');
+  } else {
+    document.getElementById('speak-mode').classList.add('active');
+    if (!currentSpeakItem) loadNextItem('speak');
+  }
 }
 
-h1 {
-  color: var(--primary);
-  font-size: 2.4rem;
-  margin: 0;
+async function fetchWordDetails(query) {
+  // If input is a full sentence, return directly
+  if (query.trim().includes(' ')) {
+    return {
+      text: query,
+      phonetic: `Say smoothly: "${query}"`,
+      def: "Sentence speech practice."
+    };
+  }
+
+  // Fetch dynamically from 63,000+ word Dictionary API
+  try {
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${query}`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    
+    const phonetic = data[0].phonetic || (data[0].phonetics.find(p => p.text)?.text) || "Pronunciation ready";
+    const def = data[0].meanings[0]?.definitions[0]?.definition || "Advanced English vocabulary item.";
+
+    return { text: data[0].word, phonetic, def };
+  } catch (err) {
+    return {
+      text: query,
+      phonetic: "Break into syllables to pronounce",
+      def: "Custom search word."
+    };
+  }
 }
 
-.controls-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
+async function loadNextItem(mode) {
+  const level = getSelectedLevel();
+  const pool = contentDatabase[level];
+  const item = pool[Math.floor(Math.random() * pool.length)];
+
+  if (mode === 'listen') {
+    currentListenItem = item;
+    document.getElementById('listen-text').innerText = item.text;
+    document.getElementById('listen-phonetic').innerText = item.phonetic;
+    document.getElementById('listen-def').innerText = item.def;
+  } else {
+    currentSpeakItem = item;
+    document.getElementById('speak-text').innerText = item.text;
+    document.getElementById('speak-phonetic').innerText = `How to say: ${item.phonetic}`;
+    document.getElementById('feedback').innerText = "Press the mic and speak the phrase!";
+    document.getElementById('feedback').className = "feedback";
+  }
 }
 
-.nav-tabs {
-  display: flex;
-  gap: 10px;
+async function loadCustomInput() {
+  const val = document.getElementById('custom-input').value.trim();
+  if (!val) return;
+
+  const item = await fetchWordDetails(val);
+  currentSpeakItem = item;
+
+  document.getElementById('speak-text').innerText = item.text;
+  document.getElementById('speak-phonetic').innerText = `How to say: ${item.phonetic}`;
+  document.getElementById('feedback').innerText = "Press the mic and say the phrase!";
+  document.getElementById('feedback').className = "feedback";
+  document.getElementById('custom-input').value = "";
 }
 
-.tab-btn {
-  background-color: white;
-  border: 3px solid var(--dark);
-  padding: 10px 20px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  border-radius: 20px;
-  cursor: pointer;
-  box-shadow: 0 4px 0 var(--dark);
+function speakCurrentText(mode = 'listen') {
+  const item = mode === 'listen' ? currentListenItem : currentSpeakItem;
+  if (!item) return;
+
+  const utterance = new SpeechSynthesisUtterance(item.text);
+  utterance.lang = 'en-US';
+  utterance.rate = 0.75; // Slower cadence to assist children with complex/long words
+  window.speechSynthesis.speak(utterance);
 }
 
-.tab-btn.active {
-  background-color: var(--yellow);
-  transform: translateY(-2px);
+function startListening() {
+  if (!recognition) {
+    alert("Speech Recognition requires Google Chrome or MS Edge!");
+    return;
+  }
+  document.getElementById('mic-btn').classList.add('listening');
+  document.getElementById('feedback').innerText = "Listening carefully...";
+  document.getElementById('feedback').className = "feedback";
+  recognition.start();
 }
 
-.level-selector {
-  font-weight: bold;
-  font-size: 1.1rem;
+function stopMicAnimation() {
+  document.getElementById('mic-btn').classList.remove('listening');
 }
 
-.level-selector select {
-  padding: 8px 12px;
-  font-size: 1rem;
-  border: 2px solid var(--dark);
-  border-radius: 10px;
-  font-weight: bold;
+function checkSpeech(spoken) {
+  const target = currentSpeakItem.text.toLowerCase().replace(/[^\w\s]/gi, "").trim();
+  const cleanSpoken = spoken.toLowerCase().replace(/[^\w\s]/gi, "").trim();
+
+  if (cleanSpoken === target || cleanSpoken.includes(target) || target.includes(cleanSpoken)) {
+    showFeedback(`🎉 Excellent! You said: "${spoken}"`, "correct");
+  } else {
+    showFeedback(`Close! Heard: "${spoken}". Try saying each syllable carefully.`, "incorrect");
+  }
 }
 
-.card {
-  background: var(--card-bg);
-  border: 4px solid var(--dark);
-  border-radius: 24px;
-  padding: 25px;
-  width: 100%;
-  max-width: 550px;
-  box-shadow: 0 8px 0 var(--dark);
-  text-align: center;
-  display: none;
+function showFeedback(text, statusClass) {
+  const fb = document.getElementById('feedback');
+  fb.innerText = text;
+  fb.className = `feedback ${statusClass}`;
 }
 
-.card.active {
-  display: block;
-}
-
-.word-display {
-  font-size: 2.2rem;
-  color: var(--primary);
-  margin: 15px 0;
-  line-height: 1.3;
-}
-
-.phonetic-display {
-  font-size: 1.3rem;
-  color: #636E72;
-  margin-bottom: 15px;
-  font-style: italic;
-}
-
-.definition {
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-  background: #F1F2F6;
-  padding: 12px;
-  border-radius: 12px;
-}
-
-.search-box {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 15px;
-}
-
-input[type="text"] {
-  width: 70%;
-  padding: 10px;
-  font-size: 1rem;
-  border: 2px solid var(--dark);
-  border-radius: 10px;
-}
-
-.btn {
-  background-color: var(--secondary);
-  color: white;
-  border: 3px solid var(--dark);
-  padding: 12px 24px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  border-radius: 40px;
-  cursor: pointer;
-  box-shadow: 0 4px 0 var(--dark);
-  margin: 4px;
-}
-
-.btn-small {
-  padding: 6px 14px;
-  font-size: 0.95rem;
-}
-
-.btn-next {
-  background-color: var(--yellow);
-  color: var(--dark);
-}
-
-.mic-btn {
-  background-color: #FF7675;
-  width: 75px;
-  height: 75px;
-  border-radius: 50%;
-  font-size: 2rem;
-  margin: 15px auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mic-btn.listening {
-  animation: pulse 1.2s infinite;
-  background-color: #55EFC4;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-  100% { transform: scale(1); }
-}
-
-.feedback {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-top: 10px;
-  min-height: 28px;
-}
-
-.feedback.correct { color: #2ECC71; }
-.feedback.incorrect { color: #E74C3C; }
+// Initial initialization
+loadNextItem('listen');
