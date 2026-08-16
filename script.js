@@ -1,11 +1,30 @@
-// Starter pool of words (fetches full data dynamically from Dictionary API with 63,000+ words)
-const kidWords = ["apple", "banana", "elephant", "guitar", "sunflower", "dolphin", "rainbow", "dinosaur", "rocket", "butterfly", "tiger", "adventure"];
+// Database tailored for manners, long sentences, and advanced words
+const contentDatabase = {
+  manners: [
+    { text: "Good morning! I hope you have a wonderful day.", phonetic: "Good morning! / I hope you have / a wonderful day.", def: "A polite way to greet someone early in the day." },
+    { text: "Excuse me, could you please help me with this?", phonetic: "Excuse me, / could you please help me / with this?", def: "How to politely ask for assistance." },
+    { text: "Thank you so much for your kindness.", phonetic: "Thank you so much / for your kindness.", def: "A warm way to show appreciation." },
+    { text: "It is very nice to meet you.", phonetic: "It is very nice / to meet you.", def: "What to say when you are introduced to someone new." },
+    { text: "I am sorry for making a mistake.", phonetic: "I am sorry / for making a mistake.", def: "A polite apology when you do something wrong." }
+  ],
+  longSentences: [
+    { text: "Even though it was raining heavily outside, they decided to put on their boots and splash in the puddles.", phonetic: "Even though it was raining heavily outside, / they decided to put on their boots / and splash in the puddles.", def: "Practicing a long, descriptive sentence with pauses." },
+    { text: "The extraordinary butterfly fluttered its colorful wings and landed gently on the bright yellow sunflower.", phonetic: "The extraordinary butterfly / fluttered its colorful wings / and landed gently / on the bright yellow sunflower.", def: "A beautiful sentence full of adjectives." },
+    { text: "If you always try your best and treat others with respect, you will achieve great things in life.", phonetic: "If you always try your best / and treat others with respect, / you will achieve great things in life.", def: "An inspiring long sentence." }
+  ],
+  words: [
+    { text: "Appreciation", phonetic: "/əˌpriː.ʃiˈeɪ.ʃən/", def: "Recognizing the good qualities of someone or something." },
+    { text: "Extraordinary", phonetic: "/ɪkˈstrɔː.dən.ər.i/", def: "Very unusual, remarkable, or special." },
+    { text: "Respectful", phonetic: "/rɪˈspekt.fəl/", def: "Showing politeness or honor to someone." },
+    { text: "Courageous", phonetic: "/kəˈreɪ.dʒəs/", def: "Being very brave in a difficult situation." }
+  ]
+};
 
-let currentListenWord = "";
-let currentSpeakWord = "";
+let currentListenItem = null;
+let currentSpeakItem = null;
 let recognition = null;
 
-// Initialize Speech Recognition for "Speak to Me"
+// Initialize Speech Recognition API
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SpeechRecognition();
@@ -13,12 +32,12 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   recognition.interimResults = false;
 
   recognition.onresult = function(event) {
-    const spokenWord = event.results[0][0].transcript.toLowerCase().trim();
-    checkSpeech(spokenWord);
+    const spokenText = event.results[0][0].transcript.toLowerCase().trim();
+    checkSpeech(spokenText);
   };
 
   recognition.onerror = function() {
-    showFeedback("Didn't catch that. Try again!", "incorrect");
+    showFeedback("Didn't catch that clearly. Try speaking a bit louder!", "incorrect");
     stopMicAnimation();
   };
 
@@ -27,84 +46,109 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   };
 }
 
-function switchTab(tab) {
+function getSelectedCategory() {
+  return document.getElementById('category').value;
+}
+
+function handleCategoryChange() {
+  loadNextItem('listen');
+  loadNextItem('speak');
+}
+
+function switchTab(tab, event) {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.card').forEach(card => card.classList.remove('active'));
 
+  event.target.classList.add('active');
+
   if (tab === 'listen') {
     document.getElementById('listen-mode').classList.add('active');
-    event.target.classList.add('active');
-    if (!currentListenWord) loadRandomWord('listen');
+    if (!currentListenItem) loadNextItem('listen');
   } else {
     document.getElementById('speak-mode').classList.add('active');
-    event.target.classList.add('active');
-    if (!currentSpeakWord) loadRandomWord('speak');
+    if (!currentSpeakItem) loadNextItem('speak');
   }
 }
 
-async function fetchWordDetails(word) {
+async function fetchWordDetails(query) {
+  // If input is a full sentence, provide an automatic breakdown
+  if (query.trim().includes(' ')) {
+    return {
+      text: query,
+      phonetic: `Pause at commas: "${query}"`,
+      def: "Custom sentence practice."
+    };
+  }
+
+  // Fetch dynamically from dictionary API for single words
   try {
-    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-    if (!response.ok) throw new Error('Word not found');
-    const data = await response.json();
+    const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${query}`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
     
-    const phonetic = data[0].phonetic || (data[0].phonetics.find(p => p.text)?.text) || "N/A";
-    const definition = data[0].meanings[0]?.definitions[0]?.definition || "A great English word!";
+    const phonetic = data[0].phonetic || (data[0].phonetics.find(p => p.text)?.text) || "Pronunciation ready";
+    const def = data[0].meanings[0]?.definitions[0]?.definition || "A great English word.";
 
-    return { word: data[0].word, phonetic, definition };
+    return { text: data[0].word, phonetic, def };
   } catch (err) {
-    return { word, phonetic: "Pronunciation ready", definition: "Search any valid English word!" };
+    return {
+      text: query,
+      phonetic: "Sound it out slowly",
+      def: "Custom vocabulary word."
+    };
   }
 }
 
-async function loadRandomWord(mode) {
-  const randomWord = kidWords[Math.floor(Math.random() * kidWords.length)];
-  const details = await fetchWordDetails(randomWord);
+async function loadNextItem(mode) {
+  const category = getSelectedCategory();
+  const pool = contentDatabase[category];
+  const item = pool[Math.floor(Math.random() * pool.length)];
 
   if (mode === 'listen') {
-    currentListenWord = details.word;
-    document.getElementById('listen-word').innerText = details.word;
-    document.getElementById('listen-phonetic').innerText = details.phonetic;
-    document.getElementById('listen-def').innerText = details.definition;
+    currentListenItem = item;
+    document.getElementById('listen-text').innerText = item.text;
+    document.getElementById('listen-phonetic').innerText = item.phonetic;
+    document.getElementById('listen-def').innerText = item.def;
   } else {
-    currentSpeakWord = details.word;
-    document.getElementById('speak-word').innerText = details.word;
-    document.getElementById('speak-phonetic').innerText = `How to say: ${details.phonetic}`;
-    document.getElementById('feedback').innerText = "Press the mic and say the word!";
+    currentSpeakItem = item;
+    document.getElementById('speak-text').innerText = item.text;
+    document.getElementById('speak-phonetic').innerText = `Break it down: ${item.phonetic}`;
+    document.getElementById('feedback').innerText = "Press the mic and speak clearly!";
     document.getElementById('feedback').className = "feedback";
   }
 }
 
-async function loadCustomWord() {
-  const input = document.getElementById('custom-word-input').value.trim().toLowerCase();
-  if (!input) return;
+async function loadCustomInput() {
+  const val = document.getElementById('custom-input').value.trim();
+  if (!val) return;
 
-  const details = await fetchWordDetails(input);
-  currentSpeakWord = details.word;
-  document.getElementById('speak-word').innerText = details.word;
-  document.getElementById('speak-phonetic').innerText = `How to say: ${details.phonetic}`;
-  document.getElementById('feedback').innerText = "Press the mic and say the word!";
+  const item = await fetchWordDetails(val);
+  currentSpeakItem = item;
+
+  document.getElementById('speak-text').innerText = item.text;
+  document.getElementById('speak-phonetic').innerText = `Guide: ${item.phonetic}`;
+  document.getElementById('feedback').innerText = "Press the mic and say your phrase!";
   document.getElementById('feedback').className = "feedback";
-  document.getElementById('custom-word-input').value = "";
+  document.getElementById('custom-input').value = "";
 }
 
-function speakCurrentWord(mode = 'listen') {
-  const text = mode === 'listen' ? currentListenWord : currentSpeakWord;
-  if (!text) return;
+function speakCurrentText(mode = 'listen') {
+  const item = mode === 'listen' ? currentListenItem : currentSpeakItem;
+  if (!item) return;
 
-  const utterance = new SpeechSynthesisUtterance(text);
+  const utterance = new SpeechSynthesisUtterance(item.text);
   utterance.lang = 'en-US';
-  utterance.rate = 0.8; // Slower speaking rate for kids
+  utterance.rate = 0.75; // Slower rate so kids can hear every word in long sentences clearly
   window.speechSynthesis.speak(utterance);
 }
 
 function startListening() {
   if (!recognition) {
-    alert("Speech recognition works best in Google Chrome!");
+    alert("Speech Recognition requires Google Chrome or Microsoft Edge!");
     return;
   }
   document.getElementById('mic-btn').classList.add('listening');
-  document.getElementById('feedback').innerText = "Listening...";
+  document.getElementById('feedback').innerText = "Listening carefully...";
   document.getElementById('feedback').className = "feedback";
   recognition.start();
 }
@@ -114,11 +158,15 @@ function stopMicAnimation() {
 }
 
 function checkSpeech(spoken) {
-  const target = currentSpeakWord.toLowerCase().trim();
-  if (spoken === target || spoken.includes(target)) {
-    showFeedback(`🎉 Awesome! You said: "${spoken}"`, "correct");
+  // Clean up punctuation to accurately compare long sentences
+  const target = currentSpeakItem.text.toLowerCase().replace(/[.,!?;]/g, "").trim();
+  const cleanSpoken = spoken.toLowerCase().replace(/[.,!?;]/g, "").trim();
+
+  // For long sentences, we accept if they got at least a good chunk of it correct
+  if (cleanSpoken === target || cleanSpoken.includes(target) || target.includes(cleanSpoken)) {
+    showFeedback(`🎉 Beautiful manners! You said: "${spoken}"`, "correct");
   } else {
-    showFeedback(`Try again! You said "${spoken}", expected "${target}".`, "incorrect");
+    showFeedback(`Great try! I heard: "${spoken}". Take a breath at the slashes (/) and try again!`, "incorrect");
   }
 }
 
@@ -128,5 +176,5 @@ function showFeedback(text, statusClass) {
   fb.className = `feedback ${statusClass}`;
 }
 
-// Initial load
-loadRandomWord('listen');
+// Start the app by loading the first item
+loadNextItem('listen');
