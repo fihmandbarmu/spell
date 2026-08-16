@@ -1,1 +1,286 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kids English Adventure</title>
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --secondary: #FF9800;
+      --accent: #2196F3;
+      --bg: #F0F9FF;
+      --card-bg: #FFFFFF;
+      --text: #333333;
+    }
+
+    body {
+      font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: var(--secondary);
+      font-size: 2.5rem;
+      margin: 0;
+      text-shadow: 2px 2px #FFE0B2;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 4px solid #B3E5FC;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: #E0E0E0;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.2rem;
+      border: 2px solid #DDD;
+      border-radius: 10px;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    .btn {
+      padding: 12px 20px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      color: white;
+      transition: transform 0.1s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-listen { background: var(--primary); }
+    .btn-speak { background: var(--secondary); }
+
+    .result-box {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #F5F5F5;
+      min-height: 50px;
+    }
+
+    .word-title {
+      font-size: 1.8rem;
+      color: var(--accent);
+      margin: 0 0 5px 0;
+    }
+
+    .phonetic {
+      font-style: italic;
+      color: #666;
+    }
+
+    .status {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .success { color: var(--primary); }
+    .error { color: #E53935; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎈 Kids English Adventure 🎈</h1>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('listen')">👂 Listen to Me</button>
+      <button class="tab-btn" onclick="switchTab('speak')">🗣️ Speak to Me</button>
+    </div>
+
+    <!-- LISTEN TO ME SECTION -->
+    <div id="listen-section" class="section active">
+      <p>Type any word (access to 60,000+ words via online lookup):</p>
+      <input type="text" id="listen-input" placeholder="e.g., Apple, Elephant, Happy...">
+      <button class="btn btn-listen" onclick="handleListen()">🔊 Hear Word & Definition</button>
+      
+      <div id="listen-result" class="result-box">
+        <em>Type a word above to learn how to say it!</em>
+      </div>
+    </div>
+
+    <!-- SPEAK TO ME SECTION -->
+    <div id="speak-section" class="section">
+      <p>Target Word to Practice:</p>
+      <input type="text" id="target-word" placeholder="Type a word to practice...">
+      <button class="btn btn-speak" onclick="startSpeechRecognition()">🎙️ Start Speaking</button>
+      
+      <div id="speak-result" class="result-box">
+        <div id="target-display"></div>
+        <div id="speech-status" class="status">Click the microphone button and say the word aloud!</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching logic
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+
+      if (tab === 'listen') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('listen-section').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('speak-section').classList.add('active');
+      }
+    }
+
+    // Text to Speech
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Stop ongoing speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.85; // Slightly slower speed for kids
+        utterance.pitch = 1.1; // Friendly pitch
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert("Text-to-speech is not supported in this browser.");
+      }
+    }
+
+    // Listen to Me functionality
+    async function handleListen() {
+      const word = document.getElementById('listen-input').value.trim();
+      const resultBox = document.getElementById('listen-result');
+
+      if (!word) {
+        resultBox.innerHTML = '<span class="error">Please type a word first!</span>';
+        return;
+      }
+
+      resultBox.innerHTML = 'Searching dictionary...';
+
+      try {
+        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+        if (!response.ok) throw new Error("Word not found");
+        
+        const data = await response.json();
+        const entry = data[0];
+        const phonetic = entry.phonetic || (entry.phonetics.find(p => p.text) ? entry.phonetics.find(p => p.text).text : '');
+        const definition = entry.meanings[0].definitions[0].definition;
+
+        resultBox.innerHTML = `
+          <h2 class="word-title">${entry.word}</h2>
+          <p class="phonetic">${phonetic}</p>
+          <p><strong>Meaning:</strong> ${definition}</p>
+        `;
+
+        speakText(entry.word);
+      } catch (err) {
+        resultBox.innerHTML = `
+          <h2 class="word-title">${word}</h2>
+          <p class="error">Definition not found in database, but you can still hear it!</p>
+        `;
+        speakText(word);
+      }
+    }
+
+    // Speech Recognition for Speak to Me section
+    function startSpeechRecognition() {
+      const targetWord = document.getElementById('target-word').value.trim().toLowerCase();
+      const statusBox = document.getElementById('speech-status');
+
+      if (!targetWord) {
+        statusBox.innerHTML = '<span class="error">Enter a word above to practice!</span>';
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        statusBox.innerHTML = '<span class="error">Speech Recognition is not supported on this browser. Try Chrome or Safari.</span>';
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+
+      statusBox.innerHTML = 'Listening... Say the word now! 👂';
+
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const spokenWord = event.results[0][0].transcript.toLowerCase().trim();
+        if (spokenWord.includes(targetWord) || targetWord.includes(spokenWord)) {
+          statusBox.innerHTML = `<span class="success">🎉 Great job! You said: "${spokenWord}" correctly!</span>`;
+          speakText("Great job!");
+        } else {
+          statusBox.innerHTML = `<span class="error">Not quite! You said: "${spokenWord}". Try again!</span>`;
+        }
+      };
+
+      recognition.onerror = (event) => {
+        statusBox.innerHTML = `<span class="error">Error listening: ${event.error}. Please try again.</span>`;
+      };
+    }
+  </script>
+</body>
+</html>
