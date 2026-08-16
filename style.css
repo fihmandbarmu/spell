@@ -142,7 +142,7 @@ function speakCurrentText(mode = 'listen') {
 
 function startListening() {
   if (!recognition) {
-    alert("Speech Recognition requires Google Chrome or MS Edge!");
+    alert("100 we don;t suport that browser for sound 🔇");
     return;
   }
   document.getElementById('mic-btn').classList.add('listening');
