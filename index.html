@@ -3,61 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Advanced English Speech Academy</title>
+  <title>Kids English Adventure</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <header>
-    <h1>English Speech Academy 🌟</h1>
-    <p>Master 63,000+ Words & Sentences!</p>
+    <h1>Word Explorer 🌟</h1>
+    <p>Learn over 63,000+ English words!</p>
   </header>
 
-  <div class="controls-bar">
-    <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('listen', event)">🎧 Listen Mode</button>
-      <button class="tab-btn" onclick="switchTab('speak', event)">🗣️ Speak Mode</button>
-    </div>
-
-    <div class="level-selector">
-      <label for="difficulty">Level: </label>
-      <select id="difficulty" onchange="handleLevelChange()">
-        <option value="basic">Basic (Words & Sentences)</option>
-        <option value="advanced" selected>Advanced (Long Words & Sentences)</option>
-        <option value="expert">Expert (Complex Academic Phrasing)</option>
-      </select>
-    </div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('listen')">🎧 Listen to Me</button>
+    <button class="tab-btn" onclick="switchTab('speak')">🗣️ Speak to Me</button>
   </div>
 
   <!-- LISTEN TO ME MODE -->
   <div id="listen-mode" class="card active">
-    <h2>Listen & Pronounce</h2>
-    <div class="word-display" id="listen-text">Loading...</div>
+    <h2>Listen & Learn</h2>
+    <div class="word-display" id="listen-word">Loading...</div>
     <div class="phonetic-display" id="listen-phonetic">...</div>
     <div class="definition" id="listen-def">...</div>
     
-    <button class="btn" onclick="speakCurrentText('listen')">🔊 Listen</button>
-    <button class="btn btn-next" onclick="loadNextItem('listen')">➡️ Next Item</button>
+    <button class="btn" onclick="speakCurrentWord('listen')">🔊 Listen</button>
+    <button class="btn btn-next" onclick="loadRandomWord('listen')">➡️ Next Word</button>
   </div>
 
   <!-- SPEAK TO ME MODE -->
   <div id="speak-mode" class="card">
-    <h2>Speak to Me</h2>
+    <h2>Speak the Word</h2>
     
-    <div class="search-box">
-      <input type="text" id="custom-input" placeholder="Search any of 63,000+ words or sentences...">
-      <button class="btn btn-small" onclick="loadCustomInput()">Search</button>
-    </div>
+    <input type="text" id="custom-word-input" placeholder="Type any word (e.g. dinosaur)...">
+    <button class="btn" onclick="loadCustomWord()">Search Word</button>
 
-    <div class="word-display" id="speak-text">Loading...</div>
+    <hr style="margin: 20px 0; border: 1px solid #ddd;">
+
+    <div class="word-display" id="speak-word">Loading...</div>
     <div class="phonetic-display" id="speak-phonetic">How to say: ...</div>
-    <button class="btn btn-small" onclick="speakCurrentText('speak')">🔊 Hear Slow Example</button>
+    <button class="btn btn-small" onclick="speakCurrentWord('speak')">🔊 Hear Example</button>
 
     <button class="btn mic-btn" id="mic-btn" onclick="startListening()">🎙️</button>
-    <div class="feedback" id="feedback">Press the mic and speak clearly!</div>
+    <div class="feedback" id="feedback">Press the mic and say the word!</div>
     
     <br>
-    <button class="btn btn-next" onclick="loadNextItem('speak')">🎲 Random Challenge</button>
+    <button class="btn btn-next" onclick="loadRandomWord('speak')">🎲 Random Word</button>
   </div>
 
   <script src="script.js"></script>
