@@ -1,20 +1,21 @@
 :root {
-  --primary: #FF6B6B;
-  --secondary: #4ECDC4;
-  --yellow: #FFE66D;
-  --dark: #2C3E50;
-  --light: #F7F9FC;
+  --primary: #6C5CE7;
+  --secondary: #00CEC9;
+  --yellow: #FDCB6E;
+  --dark: #2D3436;
+  --light: #DFE6E9;
+  --card-bg: #FFFFFF;
 }
 
 * {
   box-sizing: border-box;
-  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Fredoka', sans-serif;
+  font-family: 'Comic Sans MS', 'Fredoka', 'Chalkboard SE', sans-serif;
 }
 
 body {
   margin: 0;
   padding: 20px;
-  background-color: var(--light);
+  background-color: #F4F6F9;
   color: var(--dark);
   display: flex;
   flex-direction: column;
@@ -24,47 +25,65 @@ body {
 
 header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 h1 {
   color: var(--primary);
-  font-size: 2.5rem;
-  margin: 0 0 10px 0;
-  text-shadow: 2px 2px 0px var(--yellow);
+  font-size: 2.4rem;
+  margin: 0;
+}
+
+.controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .nav-tabs {
   display: flex;
-  gap: 15px;
-  margin-bottom: 25px;
+  gap: 10px;
 }
 
 .tab-btn {
   background-color: white;
   border: 3px solid var(--dark);
-  padding: 12px 24px;
-  font-size: 1.2rem;
+  padding: 10px 20px;
+  font-size: 1.1rem;
   font-weight: bold;
-  border-radius: 25px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
   box-shadow: 0 4px 0 var(--dark);
 }
 
 .tab-btn.active {
   background-color: var(--yellow);
   transform: translateY(-2px);
-  box-shadow: 0 6px 0 var(--dark);
+}
+
+.level-selector {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.level-selector select {
+  padding: 8px 12px;
+  font-size: 1rem;
+  border: 2px solid var(--dark);
+  border-radius: 10px;
+  font-weight: bold;
 }
 
 .card {
-  background: white;
+  background: var(--card-bg);
   border: 4px solid var(--dark);
-  border-radius: 20px;
-  padding: 30px;
+  border-radius: 24px;
+  padding: 25px;
   width: 100%;
-  max-width: 500px;
+  max-width: 550px;
   box-shadow: 0 8px 0 var(--dark);
   text-align: center;
   display: none;
@@ -75,48 +94,58 @@ h1 {
 }
 
 .word-display {
-  font-size: 3rem;
+  font-size: 2.2rem;
   color: var(--primary);
   margin: 15px 0;
-  text-transform: capitalize;
+  line-height: 1.3;
 }
 
 .phonetic-display {
-  font-size: 1.4rem;
-  color: #7F8C8D;
+  font-size: 1.3rem;
+  color: #636E72;
   margin-bottom: 15px;
+  font-style: italic;
 }
 
 .definition {
   font-size: 1.1rem;
-  margin-bottom: 25px;
-  background: #EDF2F7;
-  padding: 15px;
+  margin-bottom: 20px;
+  background: #F1F2F6;
+  padding: 12px;
   border-radius: 12px;
+}
+
+.search-box {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+input[type="text"] {
+  width: 70%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 2px solid var(--dark);
+  border-radius: 10px;
 }
 
 .btn {
   background-color: var(--secondary);
   color: white;
   border: 3px solid var(--dark);
-  padding: 15px 30px;
-  font-size: 1.3rem;
+  padding: 12px 24px;
+  font-size: 1.1rem;
   font-weight: bold;
-  border-radius: 50px;
+  border-radius: 40px;
   cursor: pointer;
-  box-shadow: 0 5px 0 var(--dark);
-  transition: all 0.1s ease;
-  margin: 5px;
+  box-shadow: 0 4px 0 var(--dark);
+  margin: 4px;
 }
 
 .btn-small {
-  padding: 5px 15px;
-  font-size: 0.9rem;
-}
-
-.btn:active {
-  transform: translateY(4px);
-  box-shadow: 0 1px 0 var(--dark);
+  padding: 6px 14px;
+  font-size: 0.95rem;
 }
 
 .btn-next {
@@ -126,14 +155,14 @@ h1 {
 
 .mic-btn {
   background-color: #FF7675;
-  width: 80px;
-  height: 80px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
   font-size: 2rem;
+  margin: 15px auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 20px auto;
 }
 
 .mic-btn.listening {
@@ -143,26 +172,16 @@ h1 {
 
 @keyframes pulse {
   0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
 
 .feedback {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  margin-top: 15px;
-  min-height: 30px;
+  margin-top: 10px;
+  min-height: 28px;
 }
 
 .feedback.correct { color: #2ECC71; }
 .feedback.incorrect { color: #E74C3C; }
-
-input[type="text"] {
-  width: 80%;
-  padding: 12px;
-  font-size: 1.2rem;
-  border: 3px solid var(--dark);
-  border-radius: 12px;
-  margin-bottom: 15px;
-  text-align: center;
-}
